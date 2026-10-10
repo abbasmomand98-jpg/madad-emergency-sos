@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madad — Emergency SOS & Ambulance Finder (UX Concept)</title>
+<style>
+  :root{
+    --red:#DC2626; --red-dark:#B91C1C; --red-soft:#FEF2F2;
+    --ink:#111827; --muted:#6B7280; --line:#E5E7EB;
+    --card:#FFFFFF; --bg:#F3F4F6; --green:#15803D; --green-soft:#F0FDF4;
+    --amber:#B45309; --amber-soft:#FFFBEB;
+    --radius:18px; --shadow:0 10px 30px rgba(17,24,39,.10);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .page-note{max-width:340px; margin-right:48px; display:none;}
+  @media(min-width:1000px){.page-note{display:block;}}
+  .page-note h1{font-size:30px; margin:0 0 10px;}
+  .page-note p{color:var(--muted); line-height:1.6; font-size:15px;}
+  .page-note .chip{display:inline-block; background:#FEE2E2; color:var(--red-dark); font-weight:700; font-size:12px; padding:5px 12px; border-radius:999px; margin-bottom:12px; letter-spacing:.4px;}
+  .phone{width:390px; height:830px; max-height:92vh; background:#fff; border-radius:44px; box-shadow:var(--shadow), 0 0 0 10px #111827; overflow:hidden; position:relative; display:flex; flex-direction:column;}
+  .notch{position:absolute; top:12px; left:50%; transform:translateX(-50%); width:120px; height:28px; background:#111827; border-radius:999px; z-index:5;}
+  .screen{flex:1; overflow-y:auto; padding:56px 20px 24px; display:none; animation:fade .28s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(8px);}to{opacity:1; transform:none;}}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+  .logo{display:flex; align-items:center; gap:8px; font-weight:800; font-size:20px;}
+  .logo .cross{width:30px; height:30px; border-radius:9px; background:var(--red); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900;}
+  .loc{font-size:12.5px; color:var(--muted); background:#F3F4F6; padding:7px 12px; border-radius:999px;}
+  h2.title{font-size:23px; margin:14px 0 4px; letter-spacing:-.3px;}
+  p.sub{color:var(--muted); font-size:13.5px; margin:0 0 16px; line-height:1.55;}
+  .sos-wrap{background:linear-gradient(180deg,#FFF5F5,#fff); border:1px solid #FECACA; border-radius:var(--radius); padding:26px 18px; text-align:center; margin-bottom:16px;}
+  .sos-btn{width:150px; height:150px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #EF4444, var(--red-dark)); color:#fff; border:none; font-size:30px; font-weight:900; letter-spacing:1px; cursor:pointer; box-shadow:0 12px 28px rgba(220,38,38,.45), 0 0 0 14px rgba(220,38,38,.10); position:relative; user-select:none;}
+  .sos-btn:active{transform:scale(.96);}
+  .sos-btn.holding{box-shadow:0 12px 28px rgba(220,38,38,.45), 0 0 0 14px rgba(220,38,38,.10), 0 0 0 24px rgba(220,38,38,.08);}
+  .sos-hint{font-size:12.5px; color:var(--muted); margin-top:14px;}
+  .hold-bar{height:6px; background:#FECACA; border-radius:99px; margin-top:10px; overflow:hidden;}
+  .hold-fill{height:100%; width:0%; background:var(--red); border-radius:99px;}
+  .quick-calls{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:16px;}
+  .call{display:block; text-decoration:none; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 6px; text-align:center; font-size:12px; font-weight:700;}
+  .call small{display:block; color:var(--muted); font-weight:600; font-size:11px; margin-top:2px;}
+  .call .ph{font-size:20px;}
+  .section-label{font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); margin:18px 0 10px;}
+  .hcard{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .hcard .name{font-weight:700; font-size:15px;}
+  .hcard .meta{font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .beds{font-size:12px; font-weight:800; padding:6px 10px; border-radius:999px; white-space:nowrap;}
+  .beds.ok{background:var(--green-soft); color:var(--green);}
+  .beds.low{background:var(--amber-soft); color:var(--amber);}
+  .beds.full{background:var(--red-soft); color:var(--red-dark);}
+  .btn{width:100%; border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; cursor:pointer; background:var(--red); color:#fff; box-shadow:0 8px 20px rgba(220,38,38,.35);}
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:#fff; color:var(--ink); border:1px solid var(--line); box-shadow:none;}
+  .btn.green{background:var(--green);}
+  .amb{background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer; transition:.15s;}
+  .amb.sel{border-color:var(--red); background:var(--red-soft); box-shadow:0 6px 16px rgba(220,38,38,.12);}
+  .amb .row1{display:flex; justify-content:space-between; align-items:center;}
+  .amb .aname{font-weight:800; font-size:15.5px;}
+  .amb .fare{font-weight:900; font-size:17px; color:var(--red-dark);}
+  .amb .fare.free{color:var(--green);}
+  .amb .row2{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center;}
+  .tag{font-size:11.5px; font-weight:700; background:#F3F4F6; color:#374151; padding:5px 10px; border-radius:999px;}
+  .tag.eta{background:#FEE2E2; color:var(--red-dark);}
+  .rating{font-size:12.5px; color:var(--muted); font-weight:600;}
+  .track{background:var(--ink); color:#fff; border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+  .track .eta{font-size:44px; font-weight:900; letter-spacing:-1px;}
+  .track .eta-l{font-size:12px; color:#9CA3AF; text-transform:uppercase; letter-spacing:1.2px; font-weight:700;}
+  .pbar{height:8px; background:#374151; border-radius:99px; margin:14px 0 6px; overflow:hidden;}
+  .pfill{height:100%; width:4%; background:linear-gradient(90deg,#F87171,var(--red)); border-radius:99px; transition:width 1s linear;}
+  .stage{font-size:13px; color:#D1D5DB; font-weight:600;}
+  .driver{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; gap:12px; align-items:center; margin-bottom:12px;}
+  .avatar{width:48px; height:48px; border-radius:50%; background:var(--red-soft); color:var(--red-dark); font-weight:900; display:flex; align-items:center; justify-content:center; font-size:20px;}
+  .driver .dname{font-weight:800;}
+  .driver .dmeta{font-size:12.5px; color:var(--muted);}
+  .pill{font-size:11.5px; font-weight:800; padding:6px 10px; border-radius:999px; background:var(--red-soft); color:var(--red-dark); margin-right:6px;}
+  .pill.green{background:var(--green-soft); color:var(--green);}
+  .notify{background:var(--green-soft); border:1px solid #BBF7D0; border-radius:14px; padding:13px 14px; font-size:13px; color:var(--green); font-weight:700; margin-bottom:12px;}
+  .count-box{background:var(--red-soft); border:2px solid var(--red); border-radius:var(--radius); padding:28px 20px; text-align:center; margin-bottom:16px;}
+  .count-num{font-size:64px; font-weight:900; color:var(--red-dark);}
+  .receipt{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px;}
+  .receipt h3{margin:0 0 4px; font-size:18px;}
+  .rrow{display:flex; justify-content:space-between; font-size:13.5px; padding:8px 0; border-bottom:1px dashed var(--line);}
+  .rrow span:first-child{color:var(--muted);}
+  .rrow span:last-child{font-weight:700;}
+  .rrow.total span:last-child{color:var(--red-dark); font-size:17px; font-weight:900;}
+  .success{text-align:center; padding:14px 0 6px;}
+  .success .tick{width:64px; height:64px; border-radius:50%; background:var(--green-soft); color:var(--green); font-size:32px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-weight:900;}
+  .back{background:none; border:none; color:var(--muted); font-size:14px; font-weight:700; cursor:pointer; padding:8px 0; margin-bottom:4px;}
+  .footnote{font-size:11.5px; color:var(--muted); text-align:center; margin-top:18px; line-height:1.6;}
+  .toggle{display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px 14px; margin-bottom:12px; font-size:14px; font-weight:700;}
+  .switch{width:48px; height:28px; background:#D1D5DB; border-radius:99px; position:relative; cursor:pointer; transition:.2s;}
+  .switch.on{background:var(--green);}
+  .switch::after{content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; background:#fff; border-radius:50%; transition:.2s;}
+  .switch.on::after{left:23px;}
+</style>
+</head>
+<body>
+
+<div class="page-note">
+  <div class="chip">UX CONCEPT · INTERACTIVE DEMO</div>
+  <h1>Madad — Emergency SOS</h1>
+  <p>Pakistan has no single 911. In an emergency, families scramble for scattered numbers — Rescue 1122, Edhi 115, police 15 — with no idea which ambulance is closest or what it costs. Madad turns panic into three taps: hold the SOS button, pick a verified ambulance with live ETA and fixed PKR fares, and get tracked to the hospital with family auto-notified. Try it in the phone — this is a working concept demo.</p>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- SCREEN 1: HOME / SOS -->
+  <div class="screen active" id="scr-home">
+    <div class="topbar">
+      <div class="logo"><span class="cross">+</span>Madad</div>
+      <div class="loc">📍 Lahore, Punjab</div>
+    </div>
+    <h2 class="title">Emergency? Hold SOS.</h2>
+    <p class="sub">One hold dispatches the nearest verified ambulance and alerts your emergency contacts automatically.</p>
+    <div class="sos-wrap">
+      <button class="sos-btn" id="sosBtn">SOS</button>
+      <div class="hold-bar"><div class="hold-fill" id="holdFill"></div></div>
+      <div class="sos-hint">Press and hold for 3 seconds to activate</div>
+    </div>
+    <div class="section-label">Quick call helplines</div>
+    <div class="quick-calls">
+      <a class="call" href="tel:1122"><span class="ph">🚑</span>Rescue<small>1122</small></a>
+      <a class="call" href="tel:115"><span class="ph">🏥</span>Edhi<small>115</small></a>
+      <a class="call" href="tel:15"><span class="ph">🚓</span>Police<small>15</small></a>
+    </div>
+    <div class="section-label">Nearby hospitals · ICU beds live</div>
+    <div class="hcard"><div><div class="name">Jinnah Hospital</div><div class="meta">1.2 km · Emergency open 24/7</div></div><span class="beds ok">6 beds</span></div>
+    <div class="hcard"><div><div class="name">Services Hospital</div><div class="meta">2.4 km · Emergency open 24/7</div></div><span class="beds low">3 beds</span></div>
+    <div class="hcard"><div><div class="name">Shaukat Khanum</div><div class="meta">4.1 km · Emergency open 24/7</div></div><span class="beds full">Full</span></div>
+    <div class="footnote">Concept demo — simulated data. Real numbers work from your phone.</div>
+  </div>
+
+  <!-- SCREEN 2: SOS ACTIVATING -->
+  <div class="screen" id="scr-count">
+    <div class="topbar">
+      <div class="logo"><span class="cross">+</span>Madad</div>
+    </div>
+    <h2 class="title">SOS activating…</h2>
+    <p class="sub">Your location is being shared with the nearest verified ambulances and your emergency contacts.</p>
+    <div class="count-box">
+      <div class="count-num" id="countNum">3</div>
+      <div class="sos-hint" style="margin-top:6px">Dispatching in <span id="countLive">3</span> seconds</div>
+    </div>
+    <button class="btn ghost" id="cancelSos">Cancel SOS</button>
+    <div class="footnote">False alarm? Cancel within the countdown — no one is charged.</div>
+  </div>
+
+  <!-- SCREEN 3: CHOOSE AMBULANCE -->
+  <div class="screen" id="scr-amb">
+    <button class="back" onclick="show('scr-home')">‹ Cancel</button>
+    <div class="topbar">
+      <div class="logo"><span class="cross">+</span>Madad</div>
+      <div class="loc">📍 Lahore, Punjab</div>
+    </div>
+    <h2 class="title">SOS active — pick ambulance</h2>
+    <p class="sub">Verified services near you. Fares are fixed in PKR before you confirm — no haggling at the door.</p>
+    <div id="ambList"></div>
+    <div class="toggle"><span>🚨 Notify my family automatically</span><div class="switch on" id="famSwitch"></div></div>
+    <div class="footnote">All ambulances verified by Madad · GPS tracked end-to-end</div>
+  </div>
+
+  <!-- SCREEN 4: TRACKING -->
+  <div class="screen" id="scr-track">
+    <div class="topbar">
+      <div class="logo"><span class="cross">+</span>Madad</div>
+      <div class="loc" id="trackAmbName">🚑 Rescue 1122</div>
+    </div>
+    <h2 class="title">Ambulance on the way</h2>
+    <p class="sub">Live tracking is on. Your family has been notified by SMS.</p>
+    <div class="track">
+      <div class="eta-l">Arriving in</div>
+      <div class="eta" id="etaClock">05:00</div>
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="stage" id="stageTxt">● Dispatched — crew confirmed</div>
+    </div>
+    <div class="driver">
+      <div class="avatar" id="drvInit">R</div>
+      <div>
+        <div class="dname" id="drvName">Rescue 1122 Unit 14</div>
+        <div class="dmeta" id="drvMeta">Suzuki Bolan · LEB-7742 · Paramedic on board</div>
+      </div>
+    </div>
+    <div>
+      <span class="pill">🩸 Blood: O+</span><span class="pill green">🏥 Jinnah Hospital · 6 ICU beds held</span>
+    </div>
+    <div style="height:12px"></div>
+    <div class="notify" id="notifyBox">✓ SMS sent to Ammi &amp; Imran — "Emergency SOS activated. Ambulance en route to Jinnah Hospital, Lahore."</div>
+    <button class="btn ghost" id="callCrew" style="margin-top:4px">📞 Call the crew</button>
+  </div>
+
+  <!-- SCREEN 5: RECEIPT -->
+  <div class="screen" id="scr-done">
+    <div class="success">
+      <div class="tick">✓</div>
+      <h2 class="title" style="margin:0">Arrived at Jinnah Hospital</h2>
+      <p class="sub" style="margin:8px 0 0">Total trip time 24 min · Emergency team was pre-alerted with your details.</p>
+    </div>
+    <div class="receipt">
+      <h3>Trip receipt</h3>
+      <div class="rrow"><span>Reference</span><span id="refNo">MAD-10241</span></div>
+      <div class="rrow"><span>Ambulance</span><span id="rAmb">Rescue 1122 Unit 14</span></div>
+      <div class="rrow"><span>Distance</span><span>6.8 km</span></div>
+      <div class="rrow"><span>Hospital</span><span>Jinnah Hospital, Lahore</span></div>
+      <div class="rrow"><span>Family notified</span><span>✓ 2 contacts</span></div>
+      <div class="rrow total"><span>Total paid</span><span id="rFare">Rs 0</span></div>
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn green" id="rateBtn">★ Rate this rescue</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost" onclick="resetDemo()">↺ Try the demo again</button>
+  </div>
+</div>
+
+<script>
+var AMBS = [
+  {id:0, name:"Rescue 1122 Unit 14", fare:"Free", fareNum:0, free:true, eta:"5 min", etaSec:300, rating:"★ 4.8 (2,140 trips)", type:"Paramedic on board", veh:"Suzuki Bolan · LEB-7742", drv:"R"},
+  {id:1, name:"Cardiac Care Ambulance", fare:"Rs 3,500", fareNum:3500, free:false, eta:"4 min", etaSec:240, rating:"★ 4.9 (388 trips)", type:"Advanced life support · Ventilator", veh:"Toyota Hiace · LXR-2091", drv:"C"},
+  {id:2, name:"Edhi Welfare Ambulance", fare:"Rs 1,800", fareNum:1800, free:false, eta:"7 min", etaSec:420, rating:"★ 4.6 (5,902 trips)", type:"Basic life support", veh:"Suzuki Bolan · EDH-115", drv:"E"}
+];
+var selected = 0;
+var trackTimer = null, trackLeft = 0;
+
+function show(id){
+  var ss = document.querySelectorAll('.screen');
+  for(var i=0;i<ss.length;i++) ss[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  document.querySelector('.phone').scrollTop = 0;
+}
+
+function renderAmbs(){
+  var el = document.getElementById('ambList');
+  var html = '';
+  for(var i=0;i<AMBS.length;i++){
+    var a = AMBS[i];
+    html += '<div class="amb'+(i===selected?' sel':'')+'" onclick="pickAmb('+i+')">'
+      + '<div class="row1"><div class="aname">'+a.name+'</div>'
+      + '<div class="fare'+(a.free?' free':'')+'">'+a.fare+'</div></div>'
+      + '<div class="row2"><span class="tag eta">⏱ '+a.eta+'</span><span class="tag">'+a.type+'</span>'
+      + '<span class="rating">'+a.rating+'</span></div></div>';
+  }
+  html += '<button class="btn" onclick="startTrack()">Request '+AMBS[selected].name.split(' ')[0]+' '+AMBS[selected].name.split(' ')[1]+' →</button>';
+  el.innerHTML = html;
+}
+function pickAmb(i){ selected = i; renderAmbs(); }
+
+/* SOS hold-to-activate */
+var holdTimer = null, holdStart = 0;
+var sosBtn = document.getElementById('sosBtn');
+var holdFill = document.getElementById('holdFill');
+function holdTick(){
+  var p = (Date.now()-holdStart)/3000;
+  if(p>=1){ clearInterval(holdTimer); holdFill.style.width='0%'; sosBtn.classList.remove('holding'); startCount(); }
+  else holdFill.style.width = Math.round(p*100)+'%';
+}
+sosBtn.addEventListener('pointerdown', function(){ sosBtn.classList.add('holding'); holdStart=Date.now(); holdTimer=setInterval(holdTick,50); });
+['pointerup','pointerleave','pointercancel'].forEach(function(ev){ sosBtn.addEventListener(ev, function(){ clearInterval(holdTimer); holdFill.style.width='0%'; sosBtn.classList.remove('holding'); }); });
+
+/* countdown */
+var countTimer = null;
+function startCount(){
+  show('scr-count');
+  var n = 3;
+  document.getElementById('countNum').textContent = n;
+  document.getElementById('countLive').textContent = n;
+  countTimer = setInterval(function(){
+    n--;
+    if(n<=0){ clearInterval(countTimer); selected = 0; renderAmbs(); show('scr-amb'); }
+    else { document.getElementById('countNum').textContent = n; document.getElementById('countLive').textContent = n; }
+  }, 1000);
+}
+document.getElementById('cancelSos').addEventListener('click', function(){ clearInterval(countTimer); show('scr-home'); });
+
+/* family toggle */
+document.getElementById('famSwitch').addEventListener('click', function(){ this.classList.toggle('on'); });
+
+/* tracking simulation (accelerated: 1 real second = 20 sim seconds) */
+var SIM = 20;
+function startTrack(){
+  var a = AMBS[selected];
+  document.getElementById('trackAmbName').textContent = '🚑 '+a.name;
+  document.getElementById('drvInit').textContent = a.drv;
+  document.getElementById('drvName').textContent = a.name;
+  document.getElementById('drvMeta').textContent = a.veh+' · '+a.type;
+  document.getElementById('rAmb').textContent = a.name;
+  document.getElementById('rFare').textContent = a.free ? 'Rs 0 (free service)' : a.fare;
+  document.getElementById('refNo').textContent = 'MAD-'+(10240+Math.floor(Math.random()*900));
+  trackLeft = a.etaSec;
+  document.getElementById('notifyBox').style.display = document.getElementById('famSwitch').classList.contains('on') ? 'block' : 'none';
+  show('scr-track');
+  if(trackTimer) clearInterval(trackTimer);
+  trackTimer = setInterval(function(){
+    trackLeft -= SIM;
+    if(trackLeft<=0){ clearInterval(trackTimer); show('scr-done'); return; }
+    var m = Math.floor(trackLeft/60), s = trackLeft%60;
+    document.getElementById('etaClock').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    var done = 1 - trackLeft/a.etaSec;
+    document.getElementById('pfill').style.width = Math.round(done*100)+'%';
+    document.getElementById('stageTxt').textContent = done<0.5 ? '● En route — crew confirmed' : (done<0.95 ? '● Nearby — get ready at the gate' : '● Arrived — patient handover');
+  }, 1000);
+}
+document.getElementById('callCrew').addEventListener('click', function(){ alert('Calling the ambulance crew… (demo)'); });
+document.getElementById('rateBtn').addEventListener('click', function(){ alert('Thanks! Your 5★ rating helps keep crews accountable. (demo)'); });
+
+function resetDemo(){
+  if(trackTimer) clearInterval(trackTimer);
+  document.getElementById('etaClock').textContent='05:00';
+  document.getElementById('pfill').style.width='4%';
+  document.getElementById('stageTxt').textContent='● Dispatched — crew confirmed';
+  show('scr-home');
+}
+</script>
+</body>
+</html>
